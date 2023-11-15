@@ -40,7 +40,9 @@ export const createContextualize = <
   const $reducer: Reducer<State, Actions | InnerAction> = (state, action) => {
     const extraState = extraReducer?.(state, action as Actions) ?? state;
     const $state =
-      extraState === state ? getState(state, action as InnerAction) : state;
+      extraState === state
+        ? getState(state, action as InnerAction)
+        : extraState;
 
     if ("onResolve" in action && state !== $state) action.onResolve?.($state);
     return $state;
@@ -102,25 +104,29 @@ export const createContextualize = <
   };
 
   function useContextSelector<Selector extends (state: State) => unknown>(
-    selector: Selector
+    selector: Selector,
+    deps: Array<unknown>
   ): ReturnType<Selector>;
   function useContextSelector(): State;
-  function useContextSelector(selector?: (state: State) => any) {
+  function useContextSelector(
+    selector?: (state: State) => any,
+    deps?: Array<unknown>
+  ) {
     const $selector = useMemo(
       () => selector ?? ((state: State) => state),
-      [selector]
+      deps
     );
     const { addListener, getState } = useContext(context);
     const [value, setValue] = useState<ReturnType<typeof $selector>>(
       $selector(getState())
     );
     useEffect(() => {
+      setValue($selector(getState()));
       const unsubscribe = addListener((state) => {
-        if (!state) return;
         setValue($selector(state));
       });
       return unsubscribe;
-    }, [$selector, addListener, selector]);
+    }, [$selector, addListener, getState]);
 
     return value;
   }

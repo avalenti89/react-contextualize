@@ -126,8 +126,9 @@ export const createEntityReducer = <
   const reducer: Reducer<Entity[], Actions | InnerAction> = (state, action) => {
     const extraState = extraReducer?.(state, action as Actions) ?? state;
     const $state =
-      extraState === state ? getState(state, action as InnerAction) : state;
-    if ("onResolve" in action && state !== $state) action.onResolve?.($state);
+      extraState === state
+        ? getState(state, action as InnerAction)
+        : extraState;
     return $state;
   };
 
