@@ -1,0 +1,182 @@
+// export const createEntity = <Entity extends Record<string, any>>(
+//   key: keyof Entity,
+//   extraReducer?: Reducer<Entity[], { type: string; payload: any }>
+// ) => {
+//   type Key = typeof key;
+//   type PartialEntity = Partial<Entity> & Pick<Entity, Key>;
+//   type Action =
+//     | { type: "set"; payload: Entity[] }
+//     | { type: "addOne"; payload: Entity }
+//     | { type: "removeOne"; payload: Entity[Key] }
+//     | { type: "updateOne"; payload: PartialEntity }
+//     | { type: "addMany"; payload: Entity[] }
+//     | {
+//         type: "updateMany";
+//         payload: Array<PartialEntity>;
+//       };
+
+//   type Callback = (state: Entity[] | undefined) => void;
+//   type ReducerAction = { onResolve?: Callback } & Action;
+
+//   const reducer: Reducer<
+//     Entity[] | undefined,
+//     ReducerAction | { type: "initial"; payload: Entity[] | undefined }
+//   > = (state, action) => {
+//     const getState: Reducer<typeof state, typeof action> = (
+//       $state,
+//       $action
+//     ): Entity[] | undefined => {
+//       if (!$state) return undefined;
+//       const exists = (value: Entity[Key]) =>
+//         $state.some(({ [key]: id }) => id === value);
+//       switch ($action.type) {
+//         case "initial":
+//         case "set": {
+//           return $action.payload;
+//         }
+//         case "addOne": {
+//           if (exists($action.payload[key])) return $state;
+//           return [...$state, $action.payload];
+//         }
+//         case "removeOne": {
+//           if (!exists($action.payload)) return $state;
+//           return $state.filter(({ [key]: id }) => id !== $action.payload);
+//         }
+//         case "updateOne": {
+//           if (!exists($action.payload[key])) return $state;
+//           return $state.map((curr) => {
+//             return curr[key] === $action.payload[key]
+//               ? { ...curr, ...$action.payload }
+//               : curr;
+//           });
+//         }
+//         case "addMany": {
+//           const newState = [...$state];
+//           let updated = false;
+//           $action.payload.forEach((newOne) => {
+//             if (exists(newOne[key])) return;
+//             newState.push(newOne);
+//             updated = true;
+//           });
+//           if (!updated) return $state;
+//           return newState;
+//         }
+//         case "updateMany": {
+//           if (!$action.payload.some((entity) => exists(entity[key])))
+//             return $state;
+//           const newState = [...$state];
+
+//           // replace existing
+//           $action.payload.forEach((data) => {
+//             const foundIndex =
+//               $state.findIndex((p) => p.text === data.text) ?? -1;
+//             if (foundIndex < 0) return;
+
+//             newState[foundIndex] = {
+//               ...newState[foundIndex],
+//               ...data,
+//             };
+//           });
+
+//           return $state;
+//         }
+//         default: {
+//           return extraReducer?.($state, $action) ?? $state;
+//         }
+//       }
+//     };
+
+//     const $state = getState(state, action);
+//     if ("onResolve" in action && state !== $state) action.onResolve?.($state);
+//     return $state;
+//   };
+
+//   type ContextState = {
+//     getState: () => Entity[];
+//     addListener: (callback: Callback) => () => void;
+//     dispatch: React.Dispatch<ReducerAction>;
+//   };
+//   const context = React.createContext<ContextState>({
+//     getState: missingProviderFallback,
+//     addListener: missingProviderFallback,
+//     dispatch: missingProviderFallback,
+//   });
+
+//   type ProviderProps = { initialState?: Entity[]; fallback?: React.ReactNode };
+//   const Provider = ({
+//     children,
+//     initialState,
+//     fallback = null,
+//   }: React.PropsWithChildren<ProviderProps>) => {
+//     const [state, dispatch] = useReducer<typeof reducer>(reducer, initialState);
+//     useEffect(() => {
+//       dispatch({ type: "initial", payload: initialState });
+//     }, [initialState]);
+
+//     const $state = useRef(state);
+//     $state.current = state;
+
+//     const $listeners = useRef<Array<Callback>>([]);
+//     const $addListener = useRef((callback: Callback) => {
+//       const index = $listeners.current.push(callback);
+//       return () => {
+//         $listeners.current.splice(index, 1);
+//       };
+//     });
+//     const $getState = useRef(() => $state.current ?? []);
+//     useEffect(() => {
+//       $listeners.current.forEach((listener) => {
+//         listener(state);
+//       });
+//     }, [state]);
+
+//     const $contextValue = useRef<ContextState>({
+//       addListener: $addListener.current,
+//       getState: $getState.current,
+//       dispatch,
+//     });
+
+//     if (!state) return fallback;
+//     return (
+//       <context.Provider value={$contextValue.current}>
+//         {children}
+//       </context.Provider>
+//     );
+//   };
+
+//   function useContextSelector<Selector extends (state: Entity[]) => unknown>(
+//     selector: Selector
+//   ): ReturnType<Selector>;
+//   function useContextSelector(): Entity[];
+//   function useContextSelector(selector?: (state: Entity[]) => any) {
+//     const $selector = useMemo(
+//       () => selector ?? ((state: Entity[]) => state),
+//       [selector]
+//     );
+//     const { addListener, getState } = useContext(context);
+//     const [value, setValue] = useState<ReturnType<typeof $selector>>(
+//       $selector(getState())
+//     );
+//     useEffect(() => {
+//       const unsubscribe = addListener((state) => {
+//         if (!state) return;
+//         setValue($selector(state));
+//       });
+//       return unsubscribe;
+//     }, [$selector, addListener, selector]);
+
+//     return value;
+//   }
+
+//   function useContextDispatch() {
+//     const { dispatch } = useContext(context);
+//     return dispatch;
+//   }
+
+//   return {
+//     context,
+//     Provider,
+//     useContextSelector,
+//     useContextDispatch,
+//   };
+// };

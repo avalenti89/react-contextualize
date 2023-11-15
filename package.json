@@ -1,0 +1,58 @@
+{
+  "name": "@avalenti89/react-contextualize",
+  "version": "1.0.0",
+  "main": "./build/index.js",
+  "module": "./build/index.js",
+  "types": "./build/index.d.ts",
+  "files": [
+    "build"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com:avalenti89/react-contextualize.git"
+  },
+  "bugs": {
+    "url": "https://github.com/avalenti89/react-contextualize/issues"
+  },
+  "author": "avalenti89",
+  "contributors": [
+    {
+      "name": "Antonio Valenti",
+      "email": "valentiantonio89@gmail.com"
+    }
+  ],
+  "license": "ISC",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/@avalenti89"
+  },
+  "scripts": {
+    "clean:build": "rm -rf build tsconfig.tsbuildinfo",
+    "build:rollup": "NODE_ENV=production rollup --config rollup.config.ts --configPlugin typescript",
+    "watch:rollup": "rollup --config rollup.config.ts --configPlugin typescript -w",
+    "start": "npm run watch:rollup",
+    "build": "npm run clean:build && npm run build:rollup",
+    "pack": "npm run build && npm pack"
+  },
+  "devDependencies": {
+    "@types/react": ">=18",
+    "@types/react-dom": ">=18",
+    "@types/rollup-plugin-peer-deps-external": "^2.2.1",
+    "@types/rollup-plugin-url": "^3.0.1",
+    "typescript": ">=5",
+    "@rollup/plugin-babel": "^6",
+    "@rollup/plugin-commonjs": "^25",
+    "@rollup/plugin-node-resolve": "^15",
+    "@rollup/plugin-typescript": "^11",
+    "rollup-plugin-peer-deps-external": "^2",
+    "rollup-plugin-typescript-paths": "^1"
+  },
+  "peerDependencies": {
+    "react": "^18",
+    "react-dom": "^18"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app"
+    ]
+  }
+}
