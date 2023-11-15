@@ -11,12 +11,12 @@ import { missingProviderFallback } from "./missingProviderFallback";
 
 export type Action<State> = {
   type: string;
-  payload: any;
+  payload: unknown;
   onResolve?: (state: State) => void;
 };
 
 export const createContextualize = <
-  State extends any = unknown,
+  State = unknown,
   Actions extends Action<State> = Action<State>
 >(
   extraReducer?: Reducer<State, Actions>
@@ -105,7 +105,7 @@ export const createContextualize = <
     selector: Selector
   ): ReturnType<Selector>;
   function useContextSelector(): State;
-  function useContextSelector(selector?: (state: State) => any) {
+  function useContextSelector(selector?: (state: State) => unknown) {
     const $selector = useMemo(
       () => selector ?? ((state: State) => state),
       [selector]

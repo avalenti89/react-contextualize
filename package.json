@@ -25,34 +25,27 @@
   "publishConfig": {
     "registry": "https://npm.pkg.github.com/@avalenti89"
   },
+  "type": "module",
   "scripts": {
-    "clean:build": "rm -rf build tsconfig.tsbuildinfo",
-    "build:rollup": "NODE_ENV=production rollup --config rollup.config.ts --configPlugin typescript",
-    "watch:rollup": "rollup --config rollup.config.ts --configPlugin typescript -w",
-    "start": "npm run watch:rollup",
-    "build": "npm run clean:build && npm run build:rollup",
-    "pack": "npm run build && npm pack"
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview"
   },
   "devDependencies": {
-    "@types/react": ">=18",
-    "@types/react-dom": ">=18",
-    "@types/rollup-plugin-peer-deps-external": "^2.2.1",
-    "@types/rollup-plugin-url": "^3.0.1",
-    "typescript": ">=5",
-    "@rollup/plugin-babel": "^6",
-    "@rollup/plugin-commonjs": "^25",
-    "@rollup/plugin-node-resolve": "^15",
-    "@rollup/plugin-typescript": "^11",
-    "rollup-plugin-peer-deps-external": "^2",
-    "rollup-plugin-typescript-paths": "^1"
+    "@types/node": "^20.9.0",
+    "@types/react": "^18.2.15",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "@vitejs/plugin-react": "^4.0.3",
+    "eslint": "^8.45.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.3",
+    "typescript": "^5.0.2",
+    "vite": "^4.4.5",
+    "vite-plugin-dts": "^3.6.3"
   },
   "peerDependencies": {
-    "react": "^18",
-    "react-dom": "^18"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app"
-    ]
+    "react": "^18"
   }
 }

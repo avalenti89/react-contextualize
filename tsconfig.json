@@ -1,39 +1,36 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "module": "esnext",
-    "allowJs": true,
+    "target": "ESnext",
+    "useDefineForClassFields": true,
+    "lib": ["ESnext", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
     "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "moduleResolution": "node",
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
-    "isolatedModules": false,
+    "isolatedModules": true,
+    "noEmit": true,
     "jsx": "react-jsx",
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+
     // dir
     "baseUrl": "./",
     "rootDir": "./src",
     "declarationDir": "./build",
     "outDir": "./build",
 
-    // types and maps
-    "noEmit": true,
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "types": ["node", "react"],
-    // warnings
-    "noErrorTruncation": false,
-    "noImplicitThis": true,
-    "noImplicitAny": true,
-    // "noUnusedLocals": true,
-    "noFallthroughCasesInSwitch": true,
-    "forceConsistentCasingInFileNames": true,
-    "importHelpers": true,
-    "preserveSymlinks": true
+    "types": ["node", "react"]
   },
-  "exclude": ["**/.*/", "**/build", "**/node_modules"],
-  "include": ["src/**/*.ts"]
+  "include": ["src"],
+  "references": [{ "path": "./tsconfig.node.json" }]
 }

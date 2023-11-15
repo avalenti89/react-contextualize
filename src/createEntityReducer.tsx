@@ -3,7 +3,7 @@ import { Action } from "./createContextualize";
 
 type EntityId = number | string;
 export const createEntityReducer = <
-  Entity extends Record<string, any>,
+  Entity extends Record<string, unknown>,
   Actions extends Action<Entity[]> = Action<Entity[]>
 >(
   getEntityId: (entity: Entity) => EntityId,
