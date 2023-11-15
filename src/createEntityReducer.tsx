@@ -11,6 +11,7 @@ export const createEntityReducer = <
 ) => {
   type UpdatePayload = { id: EntityId; partial: Partial<Entity> };
   type InnerAction = { onResolve?: (state: Entity[]) => void } & (
+    | { type: "setOne"; payload: Entity }
     | { type: "addOne"; payload: Entity }
     | { type: "addMany"; payload: Entity[] }
     | { type: "removeOne"; payload: EntityId }
@@ -31,6 +32,11 @@ export const createEntityReducer = <
     const getIndex = (entityId: EntityId, $state: Entity[] = state) =>
       $state.findIndex((stateEntity) => getEntityId(stateEntity) === entityId);
     switch (action.type) {
+      case "setOne": {
+        const index = getIndex(getEntityId(action.payload));
+        if (index < 0) return state;
+        return state.toSpliced(index, 1, action.payload);
+      }
       case "addOne": {
         if (getIndex(getEntityId(action.payload)) >= 0) return state;
         return [...state, action.payload];
