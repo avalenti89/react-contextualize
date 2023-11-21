@@ -1,13 +1,8 @@
 import { Reducer } from "react";
-import { Action } from "./createContextualize";
 
 type EntityId = number | string;
-export const createEntityReducer = <
-  Entity extends Record<string, any>,
-  Actions extends Action<Entity[]> = Action<Entity[]>
->(
-  getEntityId: (entity: Entity) => EntityId,
-  extraReducer?: Reducer<Entity[], Actions>
+export const createEntityReducer = <Entity extends Record<string, any>>(
+  getEntityId: (entity: Entity) => EntityId
 ) => {
   type UpdatePayload = { id: EntityId; partial: Partial<Entity> };
   type InnerAction = { onResolve?: (state: Entity[]) => void } & (
@@ -129,12 +124,8 @@ export const createEntityReducer = <
     }
   };
 
-  const reducer: Reducer<Entity[], Actions | InnerAction> = (state, action) => {
-    const extraState = extraReducer?.(state, action as Actions) ?? state;
-    const $state =
-      extraState === state
-        ? getState(state, action as InnerAction)
-        : extraState;
+  const reducer: Reducer<Entity[], InnerAction> = (state, action) => {
+    const $state = getState(state, action);
     return $state;
   };
 
