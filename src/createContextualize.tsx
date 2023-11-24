@@ -12,6 +12,9 @@ import { missingProviderFallback } from "./missingProviderFallback";
 export type Action<State> = {
   type: string;
   payload: any;
+  /**
+   * @deprecated `useContextDispatch` returns an async dispatcher
+   */
   onResolve?: (state: State) => void;
 };
 
@@ -24,6 +27,9 @@ export const createContextualize = <
   type InnerAction = {
     type: "set";
     payload: State;
+    /**
+     * @deprecated `useContextDispatch` returns an async dispatcher
+     */
     onResolve?: (state: State) => void;
   };
   const getState: Reducer<State, InnerAction> = (state, action) => {
@@ -37,14 +43,17 @@ export const createContextualize = <
     }
   };
 
-  const $reducer: Reducer<State, Actions | InnerAction> = (state, action) => {
+  const $reducer: Reducer<
+    State,
+    (Actions | InnerAction) & { onResolve: (state: State) => void }
+  > = (state, action) => {
     const extraState = extraReducer?.(state, action as Actions) ?? state;
     const $state =
       extraState === state
         ? getState(state, action as InnerAction)
         : extraState;
 
-    if ("onResolve" in action && state !== $state) action.onResolve?.($state);
+    if ("onResolve" in action && state !== $state) action.onResolve($state);
     return $state;
   };
 
@@ -52,7 +61,7 @@ export const createContextualize = <
   type ContextState = {
     getState: () => State;
     addListener: (callback: Callback) => () => void;
-    dispatch: React.Dispatch<Actions | InnerAction>;
+    dispatch: (action: Actions | InnerAction) => Promise<State>;
   };
   const context = React.createContext<ContextState>({
     getState: missingProviderFallback,
@@ -69,8 +78,22 @@ export const createContextualize = <
       $reducer,
       initialState
     );
+
+    const asyncDispatch = useRef(
+      (action: Actions | InnerAction) =>
+        new Promise<State>((resolve) => {
+          dispatch({
+            ...action,
+            onResolve: (state) => {
+              action.onResolve?.(state);
+              resolve(state);
+            },
+          });
+        })
+    );
+
     useEffect(() => {
-      dispatch({ type: "set", payload: initialState });
+      asyncDispatch.current({ type: "set", payload: initialState });
     }, [initialState]);
 
     const $state = useRef(state);
@@ -93,7 +116,7 @@ export const createContextualize = <
     const $contextValue = useRef<ContextState>({
       addListener: $addListener.current,
       getState: $getState.current,
-      dispatch,
+      dispatch: asyncDispatch.current,
     });
 
     return (
