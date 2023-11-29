@@ -1,6 +1,4 @@
-import React, { Reducer } from "react";
-
-export type ContextualizeState<State> = State | undefined;
+import React from "react";
 
 export type Action<State> = {
   type: string;
@@ -44,7 +42,7 @@ export type ContextualizeReducer<
 >;
 
 export type ContextualizeProvider<State> = React.ComponentType<
-  React.PropsWithChildren<{ initialState?: State }>
+  React.PropsWithChildren<{ initialState: State }>
 >;
 
 export type ContextualizeSelectorHook<State> = {

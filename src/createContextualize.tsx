@@ -6,6 +6,7 @@ import React, {
   useContext,
   useState,
   Reducer,
+  useCallback,
 } from "react";
 import { missingProviderFallback } from "./missingProviderFallback";
 import {
@@ -13,17 +14,16 @@ import {
   Contextualize,
   ContextualizeContextState,
   ContextualizeInnerAction,
+  ContextualizeProvider,
   ContextualizeReducer,
-  ContextualizeState,
 } from "./contextualize.types";
 
 export const createContextualize = <
-  S extends any = unknown,
-  Actions extends Action<ContextualizeState<S>> = Action<ContextualizeState<S>>
+  State extends any = unknown,
+  Actions extends Action<State> = Action<State>
 >(
-  extraReducer?: Reducer<ContextualizeState<S> | undefined, Actions>
-): Contextualize<ContextualizeState<S>, Actions> => {
-  type State = ContextualizeState<S>;
+  extraReducer?: Reducer<State, Actions>
+): Contextualize<State, Actions> => {
   type InnerAction = ContextualizeInnerAction<State>;
 
   const getState: ContextualizeReducer<State> = (state, action) => {
@@ -57,11 +57,10 @@ export const createContextualize = <
     dispatch: missingProviderFallback,
   });
 
-  type ProviderProps = { initialState?: State };
-  const Provider = ({
+  const Provider: ContextualizeProvider<State> = ({
     children,
     initialState,
-  }: React.PropsWithChildren<ProviderProps>) => {
+  }) => {
     const [state, dispatch] = useReducer<ContextualizeReducer<State, Actions>>(
       $reducer,
       initialState

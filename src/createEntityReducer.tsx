@@ -8,28 +8,25 @@ export const createEntityReducer = <E extends Entity>(
 
   const getState: Reducer = (state, action) => {
     const getIndex = (entityId: EntityId, $state: State = state) =>
-      $state?.findIndex(
-        (stateEntity) => getEntityId(stateEntity) === entityId
-      ) ?? -1;
+      $state.findIndex((stateEntity) => getEntityId(stateEntity) === entityId);
     switch (action.type) {
       case "setOne": {
         const index = getIndex(getEntityId(action.payload));
         if (index < 0) return state;
-        return (state ?? [])?.toSpliced(index, 1, action.payload);
+        return state.toSpliced(index, 1, action.payload);
       }
       case "addOne": {
         if (getIndex(getEntityId(action.payload)) >= 0) return state;
-        return [...(state ?? []), action.payload];
+        return [...state, action.payload];
       }
       case "addMany": {
-        let $state = [...(state ?? [])];
+        let $state = [...state];
         let updated = false;
         action.payload.forEach((payload) => {
-          const updatedState =
-            getState($state, {
-              type: "addOne",
-              payload,
-            }) ?? $state;
+          const updatedState = getState($state, {
+            type: "addOne",
+            payload,
+          });
           if (updatedState === $state) return;
           $state = updatedState;
           updated = true;
@@ -40,18 +37,16 @@ export const createEntityReducer = <E extends Entity>(
       case "removeOne": {
         const index = getIndex(action.payload);
         if (index < 0) return state;
-        return state?.toSpliced(index, 1);
+        return state.toSpliced(index, 1);
       }
       case "removeMany": {
-        if (!state) return state;
         let $state = [...state];
         let updated = false;
         action.payload.forEach((payload) => {
-          const updatedState =
-            getState($state, {
-              type: "removeOne",
-              payload,
-            }) ?? $state;
+          const updatedState = getState($state, {
+            type: "removeOne",
+            payload,
+          });
           if (updatedState === $state) return;
           $state = updatedState;
           updated = true;
@@ -62,20 +57,18 @@ export const createEntityReducer = <E extends Entity>(
       case "updateOne": {
         const index = getIndex(action.payload.id);
         if (index < 0) return state;
-        return state?.map((curr, i) =>
+        return state.map((curr, i) =>
           i !== index ? curr : { ...curr, ...action.payload.partial }
         );
       }
       case "updateMany": {
-        if (!state) return state;
         let $state = [...state];
         let updated = false;
         action.payload.forEach((payload) => {
-          const updatedState =
-            getState($state, {
-              type: "updateOne",
-              payload,
-            }) ?? $state;
+          const updatedState = getState($state, {
+            type: "updateOne",
+            payload,
+          });
           if (updatedState === $state) return;
           $state = updatedState;
           updated = true;
@@ -90,21 +83,20 @@ export const createEntityReducer = <E extends Entity>(
           return getState(state, {
             type: "updateOne",
             payload: { id: entityId, partial: action.payload },
-          }) as E[];
+          });
         return getState(state, {
           type: "addOne",
           payload: action.payload,
-        }) as E[];
+        });
       }
       case "upsertMany": {
         let $state = [...(state ?? [])];
         let updated = false;
         action.payload.forEach((payload) => {
-          const updatedState =
-            getState($state, {
-              type: "upsertOne",
-              payload,
-            }) ?? $state;
+          const updatedState = getState($state, {
+            type: "upsertOne",
+            payload,
+          });
           if (updatedState === $state) return;
           $state = updatedState;
           updated = true;

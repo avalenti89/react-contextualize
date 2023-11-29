@@ -3,7 +3,7 @@ import { Reducer } from "react";
 export type EntityId = number | string;
 export type Entity = Record<string, any>;
 
-export type EntityState<E extends Entity> = E[] | undefined;
+export type EntityState<E extends Entity> = E[];
 
 export type EntityUpdatePayload<E extends Entity> = {
   id: EntityId;
