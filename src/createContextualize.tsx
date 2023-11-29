@@ -8,31 +8,25 @@ import React, {
   Reducer,
 } from "react";
 import { missingProviderFallback } from "./missingProviderFallback";
-
-export type Action<State> = {
-  type: string;
-  payload: any;
-  /**
-   * @deprecated `useContextDispatch` returns an async dispatcher
-   */
-  onResolve?: (state: State) => void;
-};
+import {
+  Action,
+  Contextualize,
+  ContextualizeContextState,
+  ContextualizeInnerAction,
+  ContextualizeReducer,
+  ContextualizeState,
+} from "./contextualize.types";
 
 export const createContextualize = <
-  State extends any = unknown,
-  Actions extends Action<State> = Action<State>
+  S extends any = unknown,
+  Actions extends Action<ContextualizeState<S>> = Action<ContextualizeState<S>>
 >(
-  extraReducer?: Reducer<State, Actions>
-) => {
-  type InnerAction = {
-    type: "set";
-    payload: State;
-    /**
-     * @deprecated `useContextDispatch` returns an async dispatcher
-     */
-    onResolve?: (state: State) => void;
-  };
-  const getState: Reducer<State, InnerAction> = (state, action) => {
+  extraReducer?: Reducer<ContextualizeState<S> | undefined, Actions>
+): Contextualize<ContextualizeState<S>, Actions> => {
+  type State = ContextualizeState<S>;
+  type InnerAction = ContextualizeInnerAction<State>;
+
+  const getState: ContextualizeReducer<State> = (state, action) => {
     switch (action.type) {
       case "set": {
         return action.payload;
@@ -43,14 +37,11 @@ export const createContextualize = <
     }
   };
 
-  const $reducer: Reducer<
-    State,
-    (Actions | InnerAction) & { onResolve: (state: State) => void }
-  > = (state, action) => {
+  const $reducer: ContextualizeReducer<State, Actions> = (state, action) => {
     const extraState = extraReducer?.(state, action as Actions) ?? state;
     const $state =
       extraState === state
-        ? getState(state, action as InnerAction)
+        ? getState(state, action as Required<InnerAction>)
         : extraState;
 
     if ("onResolve" in action && state !== $state) action.onResolve($state);
@@ -58,23 +49,20 @@ export const createContextualize = <
   };
 
   type Callback = (state: State) => void;
-  type ContextState = {
-    getState: () => State;
-    addListener: (callback: Callback) => () => void;
-    dispatch: (action: Actions | InnerAction) => Promise<State>;
-  };
+  type ContextState = ContextualizeContextState<State, Actions>;
+
   const context = React.createContext<ContextState>({
     getState: missingProviderFallback,
     addListener: missingProviderFallback,
     dispatch: missingProviderFallback,
   });
 
-  type ProviderProps = { initialState: State };
+  type ProviderProps = { initialState?: State };
   const Provider = ({
     children,
     initialState,
   }: React.PropsWithChildren<ProviderProps>) => {
-    const [state, dispatch] = useReducer<typeof $reducer>(
+    const [state, dispatch] = useReducer<ContextualizeReducer<State, Actions>>(
       $reducer,
       initialState
     );
@@ -126,11 +114,6 @@ export const createContextualize = <
     );
   };
 
-  function useContextSelector<Selector extends (state: State) => unknown>(
-    selector: Selector,
-    deps: Array<unknown>
-  ): ReturnType<Selector>;
-  function useContextSelector(): State;
   function useContextSelector(
     selector?: (state: State) => any,
     deps?: Array<unknown>

@@ -1,49 +1,35 @@
-import { Reducer } from "react";
+import { Entity, EntityId, EntityReducer, EntityState } from "./entity.types";
 
-type EntityId = number | string;
-export const createEntityReducer = <Entity extends Record<string, any>>(
-  getEntityId: (entity: Entity) => EntityId
-) => {
-  type UpdatePayload = { id: EntityId; partial: Partial<Entity> };
-  type InnerAction = { onResolve?: (state: Entity[]) => void } & (
-    | { type: "setOne"; payload: Entity }
-    | { type: "addOne"; payload: Entity }
-    | { type: "addMany"; payload: Entity[] }
-    | { type: "removeOne"; payload: EntityId }
-    | { type: "removeMany"; payload: EntityId[] }
-    | { type: "updateOne"; payload: UpdatePayload }
-    | {
-        type: "updateMany";
-        payload: Array<UpdatePayload>;
-      }
-    | { type: "upsertOne"; payload: Entity }
-    | {
-        type: "upsertMany";
-        payload: Array<Entity>;
-      }
-  );
+export const createEntityReducer = <E extends Entity>(
+  getEntityId: (entity: E) => EntityId
+): EntityReducer<E> => {
+  type State = EntityState<E>;
+  type Reducer = EntityReducer<E>;
 
-  const getState: Reducer<Entity[], InnerAction> = (state, action) => {
-    const getIndex = (entityId: EntityId, $state: Entity[] = state) =>
-      $state.findIndex((stateEntity) => getEntityId(stateEntity) === entityId);
+  const getState: Reducer = (state, action) => {
+    const getIndex = (entityId: EntityId, $state: State = state) =>
+      $state?.findIndex(
+        (stateEntity) => getEntityId(stateEntity) === entityId
+      ) ?? -1;
     switch (action.type) {
       case "setOne": {
         const index = getIndex(getEntityId(action.payload));
         if (index < 0) return state;
-        return state.toSpliced(index, 1, action.payload);
+        return (state ?? [])?.toSpliced(index, 1, action.payload);
       }
       case "addOne": {
         if (getIndex(getEntityId(action.payload)) >= 0) return state;
-        return [...state, action.payload];
+        return [...(state ?? []), action.payload];
       }
       case "addMany": {
-        let $state = [...state];
+        let $state = [...(state ?? [])];
         let updated = false;
         action.payload.forEach((payload) => {
-          const updatedState = getState($state, {
-            type: "addOne",
-            payload,
-          });
+          const updatedState =
+            getState($state, {
+              type: "addOne",
+              payload,
+            }) ?? $state;
           if (updatedState === $state) return;
           $state = updatedState;
           updated = true;
@@ -54,16 +40,18 @@ export const createEntityReducer = <Entity extends Record<string, any>>(
       case "removeOne": {
         const index = getIndex(action.payload);
         if (index < 0) return state;
-        return state.toSpliced(index, 1);
+        return state?.toSpliced(index, 1);
       }
       case "removeMany": {
+        if (!state) return state;
         let $state = [...state];
         let updated = false;
         action.payload.forEach((payload) => {
-          const updatedState = getState($state, {
-            type: "removeOne",
-            payload,
-          });
+          const updatedState =
+            getState($state, {
+              type: "removeOne",
+              payload,
+            }) ?? $state;
           if (updatedState === $state) return;
           $state = updatedState;
           updated = true;
@@ -74,18 +62,20 @@ export const createEntityReducer = <Entity extends Record<string, any>>(
       case "updateOne": {
         const index = getIndex(action.payload.id);
         if (index < 0) return state;
-        return state.map((curr, i) =>
+        return state?.map((curr, i) =>
           i !== index ? curr : { ...curr, ...action.payload.partial }
         );
       }
       case "updateMany": {
+        if (!state) return state;
         let $state = [...state];
         let updated = false;
         action.payload.forEach((payload) => {
-          const updatedState = getState($state, {
-            type: "updateOne",
-            payload,
-          });
+          const updatedState =
+            getState($state, {
+              type: "updateOne",
+              payload,
+            }) ?? $state;
           if (updatedState === $state) return;
           $state = updatedState;
           updated = true;
@@ -100,17 +90,21 @@ export const createEntityReducer = <Entity extends Record<string, any>>(
           return getState(state, {
             type: "updateOne",
             payload: { id: entityId, partial: action.payload },
-          });
-        return getState(state, { type: "addOne", payload: action.payload });
+          }) as E[];
+        return getState(state, {
+          type: "addOne",
+          payload: action.payload,
+        }) as E[];
       }
       case "upsertMany": {
-        let $state = [...state];
+        let $state = [...(state ?? [])];
         let updated = false;
         action.payload.forEach((payload) => {
-          const updatedState = getState($state, {
-            type: "upsertOne",
-            payload,
-          });
+          const updatedState =
+            getState($state, {
+              type: "upsertOne",
+              payload,
+            }) ?? $state;
           if (updatedState === $state) return;
           $state = updatedState;
           updated = true;
@@ -124,7 +118,7 @@ export const createEntityReducer = <Entity extends Record<string, any>>(
     }
   };
 
-  const reducer: Reducer<Entity[], InnerAction> = (state, action) => {
+  const reducer: Reducer = (state, action) => {
     const $state = getState(state, action);
     return $state;
   };
