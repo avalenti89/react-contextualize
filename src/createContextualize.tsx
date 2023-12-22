@@ -6,7 +6,6 @@ import React, {
   useContext,
   useState,
   Reducer,
-  useCallback,
 } from "react";
 import { missingProviderFallback } from "./missingProviderFallback";
 import {
@@ -17,6 +16,7 @@ import {
   ContextualizeProvider,
   ContextualizeReducer,
 } from "./contextualize.types";
+import { isEqual } from "lodash";
 
 export const createContextualize = <
   State extends any = unknown,
@@ -79,8 +79,16 @@ export const createContextualize = <
         })
     );
 
+    const $initialState = useRef(initialState);
+
     useEffect(() => {
-      asyncDispatch.current({ type: "set", payload: initialState });
+      if ($initialState.current !== initialState) {
+        asyncDispatch
+          .current({ type: "set", payload: initialState })
+          .then(() => {
+            $initialState.current = initialState;
+          });
+      }
     }, [initialState]);
 
     const $state = useRef(state);
@@ -89,6 +97,7 @@ export const createContextualize = <
     const $listeners = useRef<Array<Callback>>([]);
     const $addListener = useRef((callback: Callback) => {
       const index = $listeners.current.push(callback);
+      // callback($state.current);
       return () => {
         $listeners.current.splice(index, 1);
       };
@@ -125,10 +134,14 @@ export const createContextualize = <
     const [value, setValue] = useState<ReturnType<typeof $selector>>(
       $selector(getState())
     );
+
     useEffect(() => {
-      setValue($selector(getState()));
       const unsubscribe = addListener((state) => {
-        setValue($selector(state));
+        setValue((prev: ReturnType<typeof $selector>) => {
+          const $value = $selector(state);
+          if (isEqual(prev, $value)) return prev;
+          return $value;
+        });
       });
       return unsubscribe;
     }, [$selector, addListener, getState]);
@@ -142,6 +155,7 @@ export const createContextualize = <
   }
 
   return {
+    reducer: $reducer,
     context,
     Provider,
     useContextSelector,

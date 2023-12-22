@@ -59,6 +59,7 @@ export type ContextualizeDispatcher<
 > = () => (action: Actions | ContextualizeInnerAction<State>) => Promise<State>;
 
 export type Contextualize<State, Actions extends Action<State>> = {
+  reducer: ContextualizeReducer<State, Actions>;
   context: ContextualizeContext<State, Actions>;
   Provider: ContextualizeProvider<State>;
   useContextSelector: ContextualizeSelectorHook<State>;
