@@ -82,13 +82,10 @@ export const createContextualize = <
     const $initialState = useRef(initialState);
 
     useEffect(() => {
-      if ($initialState.current !== initialState) {
-        asyncDispatch
-          .current({ type: "set", payload: initialState })
-          .then(() => {
-            $initialState.current = initialState;
-          });
-      }
+      if (isEqual($initialState.current, initialState)) return;
+      asyncDispatch.current({ type: "set", payload: initialState }).then(() => {
+        $initialState.current = initialState;
+      });
     }, [initialState]);
 
     const $state = useRef(state);
